@@ -1,0 +1,201 @@
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <style type="text/css">
+        .DepDiv {
+            text-align: left;
+            margin-top: 5px;
+            z-index: 9998;
+        }
+
+            .DepDiv:hover {
+                border: 1px solid #eeeeee;
+                margin-top: 3px;
+                background-color: #eeeeee; /*DiV背景颜色*/
+            }
+
+        .DepSpan {
+            width: 220px;
+            display: inline-block;
+            line-height: 30px;
+            background-color: #00A0E9;
+            border-radius: 3px;
+            /*padding-left: 20px;*/
+            text-align: center;
+            line-height: 30px;
+            color: #ffffff;
+            cursor: pointer;
+            z-index: 9999;
+        }
+
+        .DevPerson {
+            width: 99%;
+            position: relative;
+            /*display: block;*/
+            /*border: 0.5px solid #dddddd;*/
+            /*height: 0px;*/
+            /*opacity: 0;*/
+            vertical-align: middle;
+            text-align: left;
+            z-index: 0;
+            display: none;
+        }
+
+        .PersonSpan {
+            display: inline-block;
+            min-width: 100px;
+            text-align: center;
+            line-height: 30px;
+            border: 0.5px dashed;
+            border-radius: 3px;
+            margin: 5px 0.5% 0px 0px;
+            color: white;
+            cursor: default;
+        }
+
+        .Expanded {
+            background-color: #ea8c55;
+        }
+
+        .Shrinked {
+            background-color: #00A0E9;
+        }
+    </style>
+    <script src="jquery-2.1.1.min.js"></script>
+</head>
+
+<body style="background: #eeeeee;">
+
+    <div style="padding: 0px 2%;" id='Tree'>
+
+    </div>
+    <input type="hidden" id="Res" />
+</body>
+</html>
+<script>
+    function Divclick(obj) {
+        var dnum = Number(obj.getAttribute("dnum"));
+        dnum = dnum + 1;
+        if (dnum % 2 != 0) {
+            $(obj).next().stop(true, true).toggle(300, callback = function () { $(obj).removeClass("Expanded").addClass("Shrinked"); });
+
+        } else {
+            $(obj).next().stop(true, true).toggle(300, callback = function () { $(obj).removeClass("Shrinked").addClass("Expanded"); });
+        }
+        obj.setAttribute("dnum", dnum);
+    }
+    function CheckChange(obj) {
+        var Res = document.getElementById("Res");
+        var tabel = obj.parentNode.getElementsByTagName("input");
+        for (var i = 0; i < tabel.length; i++) {
+            if (tabel[i].type == "checkbox") {
+                tabel[i].checked = obj.checked;
+                if (tabel[i].checked && tabel[i].value != "on") {
+                    Res.value += tabel[i].value + "、";
+                }
+                else if (tabel[i].value != "on") {
+                    Res.value = Res.value.replace(tabel[i].value + "、", "");
+                }
+            }
+        }
+    }
+
+    $(document).ready(function () {
+        loaddata("", ['UserName', 'IsRead', 'ReadTime']);
+    });
+    function loaddata(jsonStr, model) {
+        jsonStr = '[{"UserName":"用户19","Dep":"部门6","FDep":"","IsRead":"0","ReadTime":""},{"UserName":"用户1","Dep":"部门1","FDep":"","IsRead":"0","ReadTime":""},{"UserName":"用户2","Dep":"部门1","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户3","Dep":"部门1","IsRead":"0","ReadTime":""},{"UserName":"用户4","Dep":"部门2","FDep":"部门1","IsRead":"0","ReadTime":""},{"UserName":"用户5","Dep":"部门2","FDep":"部门1","IsRead":"0","ReadTime":""},{"UserName":"用户6","Dep":"部门2","FDep":"部门1","IsRead":"0","ReadTime":""},{"UserName":"用户8","Dep":"部门3","FDep":"","IsRead":"0","ReadTime":""},{"UserName":"用户9","Dep":"部门3","IsRead":"0","ReadTime":""},{"UserName":"用户10","Dep":"部门3","FDep":"","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户11","Dep":"部门4","FDep":"","IsRead":"0","ReadTime":""},{"UserName":"用户12","Dep":"部门4","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户13","Dep":"部门4","FDep":"","IsRead":"0","ReadTime":""},{"UserName":"用户14","Dep":"部门5","FDep":"","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户15","Dep":"部门5","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户16","Dep":"部门5","FDep":"","IsRead":"0","ReadTime":""},{"UserName":"用户17","Dep":"部门6","FDep":"","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户18","Dep":"部门6","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户20","Dep":"部门7","FDep":"部门2","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户21","Dep":"部门7","FDep":"部门2","IsRead":"1","ReadTime":"2020-02-12"},{"UserName":"用户22","Dep":"部门7","FDep":"部门2","IsRead":"1","ReadTime":"2020-02-12"} ]';
+
+        var htmContent = "";
+        var dataList = JSON.parse(jsonStr);
+
+        var depList = [];
+        for (var i = 0; i < dataList.length; i++) {
+            if (depList.indexOf(dataList[i].Dep) < 0 && dataList[i].FDep == "") {
+                depList.push(dataList[i].Dep);
+            }
+        }
+        depList.sort();
+        //htmContent = AppendChild(dataList, "", model);
+        for (var i = 0; i < depList.length; i++) {
+            htmContent += AppendChild(dataList, depList[i], model);
+        }
+        document.getElementById("Tree").innerHTML = htmContent;
+    }
+    function AppendChild(dataList, Dep, model) {
+        var htmContent = "";
+        var flag = true;
+        var ifFirst = true;
+        var Tem = "";
+        while (flag) {
+            if (dataList.length <= 0) {
+                if (!ifFirst)
+                    htmContent += " </div></div>";
+                flag = false;
+            }
+            for (var i = 0; i < dataList.length; i++) {
+                if (dataList[i].Dep == Dep) {
+                    if (ifFirst) {
+                        htmContent += " <div class='DepDiv' ><input type='checkbox' onchange='CheckChange(this)' style='display:inline;'><span  class='DepSpan' dnum='1'  onclick='Divclick(this)'>" + dataList[i].Dep + "</span> <div class='DevPerson' >";
+                        ifFirst = false;
+                    }
+                    htmContent += AppendChildByFDep(dataList, Dep, model);
+                    htmContent += "<span class='PersonSpan' style='background-color:" + (dataList[i].IsRead == "1" ? "#9bca8b" : "#aaaaaa") + "' title='" + (dataList[i].ReadTime == "" ? "未阅读" : "阅读时间：" + dataList[i].ReadTime) + "'";
+                    for (var k = 0; k < model.length; k++) {
+                        attrName = model[k];
+                        if (dataList[i].attrName != undefined) {
+                            Tem = model[k] + "='" + dataList[i].attrName + "'";
+                        }
+                    }
+                    htmContent += Tem + "><input type='checkbox' " + Tem + " value=" + dataList[i].UserName + " style='display:inline;'>" + dataList[i].UserName + "</span>";
+                    dataList.splice(i, 1);
+                    break;
+                }
+                if (i >= dataList.length - 1) {
+                    htmContent += " </div></div>";
+                    flag = false;
+                }
+            }
+        }
+        return htmContent;
+    }
+
+    function AppendChildByFDep(dataList, fDep, model) {
+        var htmContent = "";
+        var flag = true;
+        var ifFirst = true;
+        var Tem = "";
+        while (flag) {
+            if (dataList.length <= 0) {
+                if (!ifFirst)
+                    htmContent += " </div></div>";
+                flag = false;
+            }
+            for (var i = 0; i < dataList.length; i++) {
+                if (dataList[i].FDep == fDep) {
+                    if (ifFirst) {
+                        htmContent += " <div class='DepDiv' style='margin-left: 30px;'> <input type='checkbox' onchange='CheckChange(this)' style='display:inline;'> <span  class='DepSpan' dnum='1'  onclick='Divclick(this)'>" + dataList[i].Dep + "</span> <div class='DevPerson' >";
+                        ifFirst = false;
+                    }
+                    htmContent += AppendChildByFDep(dataList, dataList[i].Dep, model);
+                    htmContent += "<span class='PersonSpan' style='background-color:" + (dataList[i].IsRead == "1" ? "#9bca8b" : "#aaaaaa") + "' title='" + (dataList[i].ReadTime == "" ? "未阅读" : "阅读时间：" + dataList[i].ReadTime) + "'";
+                    for (var k = 0; k < model.length; k++) {
+                        attrName = model[k];
+                        if (dataList[i].attrName != undefined) {
+                            Tem += model[k] + "='" + dataList[i].attrName + "'";
+                        }
+                    }
+                    htmContent += Tem + "><input type='checkbox' " + Tem + "  value=" + dataList[i].UserName + " style='display:inline;'>" + dataList[i].UserName + "</span>";
+                    dataList.splice(i, 1);
+                    break;
+                }
+                if (i >= dataList.length - 1) {
+                    if (!ifFirst)
+                        htmContent += " </div></div>";
+                    flag = false;
+                }
+            }
+        }
+        return htmContent;
+    }
+</script>
